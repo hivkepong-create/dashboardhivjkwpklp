@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DASHBOARD HIV / AIDS PERINGKAT JABATAN KESIHATAN WILAYAH PERSEKUTUAN KUALA LUMPUR & PUTRAJAYA</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Datalabels Plugin for showing values on charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <!-- PapaParse CDN for robust CSV streaming & parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        ribbon: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48', // Classic Red Ribbon
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337',
+                            950: '#4c0519'
+                        },
+                        slateDark: '#0f172a'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #be123c;
+            border-radius: 9999px;
+        }
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(244, 63, 94, 0.15);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+        .glass-panel-glow {
+            border: 1px solid rgba(225, 29, 72, 0.35);
+            box-shadow: 0 0 25px -5px rgba(225, 29, 72, 0.2);
+        }
+        .ribbon-gradient {
+            background: linear-gradient(135deg, #e11d48 0%, #881337 100%);
+        }
+        .text-glow {
+            text-shadow: 0 0 15px rgba(244, 63, 94, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 antialiased selection:bg-rose-500 selection:text-white">
+
+    <!-- Top Glow Ribbon Accent Line -->
+    <div class="h-1.5 w-full bg-gradient-to-r from-rose-900 via-rose-500 to-red-600 shadow-[0_0_15px_rgba(244,63,94,0.8)]"></div>
+
+    <!-- Header Section -->
+    <header class="border-b border-rose-950/60 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <div class="flex items-center gap-4">
+                <!-- Red Ribbon Logo Icon SVG -->
+                <div class="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-600 to-rose-950 shadow-lg shadow-rose-900/50 p-2 border border-rose-400/30">
+                    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white drop-shadow-md" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C8.69 2 6 4.69 6 8c0 2.21 1.2 4.14 3 5.18V21a1 1 0 0 0 1.6.8L12 20.7l1.4 1.1a1 1 0 0 0 1.6-.8v-7.82c1.8-1.04 3-2.97 3-5.18 0-3.31-2.69-6-6-6zm0 2c2.21 0 4 1.79 4 4 0 1.25-.58 2.37-1.5 3.1-.2.16-.33.39-.37.64L14 17.55l-.6-.45a1 1 0 0 0-1.2 0l-.6.45-.13-5.81c-.04-.25-.17-.48-.37-.64A3.99 3.99 0 0 1 8 8c0-2.21 1.79-4 4-4z"/>
+                    </svg>
+                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                    </span>
+                </div>
+                
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-full">Survelans Epidemiologi 2026</span>
+                        <span id="syncStatus" class="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Live Linked
+                        </span>
+                    </div>
+                    <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2 mt-0.5">
+                        DASHBOARD HIV / AIDS PERINGKAT JABATAN KESIHATAN WILAYAH PERSEKUTUAN KUALA LUMPUR & PUTRAJAYA
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Header Action & Filter Controls -->
+            <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                <div class="flex items-center bg-slate-900 border border-rose-900/50 rounded-xl px-3 py-1.5 shadow-inner">
+                    <label for="districtSelect" class="text-xs text-slate-400 mr-2 flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-400"></i> Daerah:
+                    </label>
+                    <select id="districtSelect" onchange="applyFilters()" class="bg-transparent text-sm font-semibold text-rose-200 focus:outline-none cursor-pointer">
+                        <option value="ALL" class="bg-slate-900 text-white font-bold" selected>Semua Daerah (WPKL & Putrajaya)</option>
+                        <option value="PK KEPONG" class="bg-slate-900 text-white">PK Kepong</option>
+                        <option value="PK TITIWANGSA" class="bg-slate-900 text-white">PK Titiwangsa</option>
+                        <option value="PK LEMBAH PANTAI" class="bg-slate-900 text-white">PK Lembah Pantai</option>
+                        <option value="PK CHERAS" class="bg-slate-900 text-white">PK Cheras</option>
+                        <option value="PK PUTRAJAYA" class="bg-slate-900 text-white">PK Putrajaya</option>
+                    </select>
+                </div>
+
+                <button onclick="fetchData()" title="Segar Semula Data Dari Cloud Google Sheet" class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/40 transition-all duration-200 active:scale-95">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="refreshIcon"></i>
+                    <span class="hidden sm:inline">Kemaskini</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Top Status Bar -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-4 border-l-rose-500">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 rounded-xl bg-rose-950/80 border border-rose-800/40 text-rose-400 shrink-0">
+                    <i data-lucide="activity" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-semibold text-white">Pemantauan & Survelans Epidemiologi HIV / AIDS</h2>
+                    <p class="text-xs text-slate-300">
+                        Paparan semasa: <span id="currentFilterLabel" class="text-rose-400 font-semibold underline decoration-rose-500">Semua Daerah (WPKL & Putrajaya)</span>
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="text-[11px] text-slate-400">Sumber Data:</span>
+                <span class="text-xs font-mono font-bold text-rose-300 bg-rose-950/70 border border-rose-800/50 px-2 py-1 rounded-lg flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-rose-400"></span> Google Sheets Live
+                </span>
+            </div>
+        </div>
+
+        <!-- Metric KPI Cards Row -->
+        <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
+            <!-- 1. Total Kes -->
+            <div class="glass-panel glass-panel-glow rounded-2xl p-4 relative overflow-hidden transition-all duration-300 hover:translate-y-[-2px]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-400">Jumlah Kes Terkumpul</span>
+                    <i data-lucide="users" class="w-4 h-4 text-rose-400"></i>
+                </div>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <div id="statTotalCases" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">0</div>
+                    <span class="text-[10px] text-rose-400 font-medium">kes</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+                    <span id="statTargetRegion" class="font-medium text-rose-300">Semua Daerah</span>
+                </div>
+            </div>
+
+            <!-- 2. HIV Sahaja (Data: HIV) -->
+            <div class="glass-panel rounded-2xl p-4 border border-rose-900/30 transition-all duration-300 hover:translate-y-[-2px]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-400">Kes HIV Sahaja</span>
+                    <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
+                </div>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <div id="statHivOnly" class="text-2xl sm:text-3xl font-extrabold text-amber-300 tracking-tight">0</div>
+                    <span id="statHivOnlyPct" class="text-[10px] text-amber-400/90 font-mono">0%</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">Sub-Diagnosis: HIV</div>
+            </div>
+
+            <!-- 3. AIDS Kes (Data: AIDS) -->
+            <div class="glass-panel rounded-2xl p-4 border border-rose-900/30 transition-all duration-300 hover:translate-y-[-2px]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-400">Kes AIDS Sahaja</span>
+                    <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-500"></i>
+                </div>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <div id="statAids" class="text-2xl sm:text-3xl font-extrabold text-rose-500 tracking-tight">0</div>
+                    <span id="statAidsPct" class="text-[10px] text-rose-400/90 font-mono">0%</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">Sub-Diagnosis: AIDS</div>
+            </div>
+
+            <!-- 4. Kematian HIV (Data: KHIV) -->
+            <div class="glass-panel rounded-2xl p-4 border border-rose-900/30 transition-all duration-300 hover:translate-y-[-2px]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-400">Kematian HIV</span>
+                    <i data-lucide="heart-off" class="w-4 h-4 text-red-400"></i>
+                </div>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <div id="statDeathHiv" class="text-2xl sm:text-3xl font-extrabold text-red-400 tracking-tight">0</div>
+                    <span id="statDeathHivPct" class="text-[10px] text-red-300/90 font-mono">0%</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">Sub-Diagnosis: KHIV</div>
+            </div>
+
+            <!-- 5. Kematian AIDS (Data: KAIDS) -->
+            <div class="glass-panel rounded-2xl p-4 border border-rose-900/30 transition-all duration-300 hover:translate-y-[-2px]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-400">Kematian AIDS</span>
+                    <i data-lucide="skull" class="w-4 h-4 text-rose-600"></i>
+                </div>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <div id="statDeathAids" class="text-2xl sm:text-3xl font-extrabold text-rose-500 tracking-tight">0</div>
+                    <span id="statDeathAidsPct" class="text-[10px] text-rose-300/90 font-mono">0%</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">Sub-Diagnosis: KAIDS</div>
+            </div>
+
+            <!-- 6. Nisbah Lelaki:Perempuan -->
+            <div class="glass-panel rounded-2xl p-4 border border-rose-900/30 transition-all duration-300 hover:translate-y-[-2px]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-400">Nisbah Jantina (L:P)</span>
+                    <i data-lucide="scale" class="w-4 h-4 text-cyan-400"></i>
+                </div>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <div id="statGenderRatio" class="text-2xl sm:text-3xl font-extrabold text-cyan-300 tracking-tight">0:1</div>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">
+                    <span id="statMaleCount" class="text-cyan-400 font-bold">0</span> L / <span id="statFemaleCount" class="text-rose-400 font-bold">0</span> P
+                </div>
+            </div>
+
+            <!-- 7. Transmisi Utama -->
+            <div class="glass-panel rounded-2xl p-4 border border-rose-900/30 transition-all duration-300 hover:translate-y-[-2px]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-400">Transmisi Utama</span>
+                    <i data-lucide="zap" class="w-4 h-4 text-orange-400"></i>
+                </div>
+                <div class="mt-2">
+                    <div id="statTopRisk" class="text-sm font-bold text-orange-300 truncate" title="Transmisi Dominan">-</div>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">Mod Transmisi Tertinggi</div>
+            </div>
+        </section>
+
+        <!-- SECTION 1: EPIDEMIOLOGY CURVE & DISTRICT COMPARISON -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Graf Epid (Epidemic Curve by Epid Week & District Lines) -->
+            <div class="lg:col-span-7 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="p-1 rounded-md bg-rose-500/20 text-rose-400"><i data-lucide="line-chart" class="w-4 h-4"></i></span>
+                            <h3 class="text-base font-bold text-white">Keluk Epidemiologi (Epid Curve)</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Tren bilangan kes mengikut Minggu Epidemiologi (ME) dan Daerah</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] bg-slate-900 border border-slate-800 text-slate-300">
+                            <span class="w-2 h-2 rounded-full bg-rose-500"></span> Mengikut Minggu Epid (ME)
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="h-72 w-full relative">
+                    <canvas id="chartEpidCurve"></canvas>
+                </div>
+                
+                <div class="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                    <span class="flex items-center gap-1">
+                        <i data-lucide="info" class="w-3.5 h-3.5 text-rose-400"></i> Sumber Minggu Epidemiologi dari data survelans kesihatan.
+                    </span>
+                    <span id="epidCurveSummary" class="text-rose-300 font-medium">Memuatkan data...</span>
+                </div>
+            </div>
+
+            <!-- Graf Perbandingan Diagnosis Mengikut Daerah -->
+            <div class="lg:col-span-5 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="p-1 rounded-md bg-rose-500/20 text-rose-400"><i data-lucide="bar-chart-3" class="w-4 h-4"></i></span>
+                            <h3 class="text-base font-bold text-white">Perbandingan Mengikut Daerah</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Taburan kes di bawah Pejabat Kesihatan WPKL & Putrajaya</p>
+                    </div>
+                </div>
+                
+                <div class="h-72 w-full relative">
+                    <canvas id="chartDistricts"></canvas>
+                </div>
+
+                <div class="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                    <span>Daerah Tertinggi: <strong id="topDistrictLabel" class="text-rose-400">-</strong></span>
+                    <span>Jumlah Daerah: <strong id="totalDistrictsCount" class="text-rose-400">5 Daerah</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: SUB-DIAGNOSIS, JANTINA, KATEGORI UMUR & BANGSA -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <!-- 1. Sub-Diagnos -->
+            <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-rose-400"></i> Sub-Diagnos Kes
+                        </h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">Pecahan HIV Positif vs AIDS Lanjut</p>
+                </div>
+                <div class="h-52 relative flex items-center justify-center">
+                    <canvas id="chartSubDiagnosis"></canvas>
+                </div>
+                <div id="subDiagLegend" class="mt-3 space-y-1 text-xs border-t border-slate-800 pt-2 text-slate-300">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- 2. Jantina (Gender Distribution) -->
+            <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
+                            <i data-lucide="venn-diagram" class="w-4 h-4 text-cyan-400"></i> Demografi Jantina
+                        </h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">Distribusi Keseluruhan Mengikut Jantina</p>
+                </div>
+                <div class="h-52 relative flex items-center justify-center">
+                    <canvas id="chartGender"></canvas>
+                </div>
+                <div id="genderLegend" class="mt-3 space-y-1 text-xs border-t border-slate-800 pt-2 text-slate-300">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- 3. Kategori Umur (Age Groups) -->
+            <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
+                            <i data-lucide="hourglass" class="w-4 h-4 text-amber-400"></i> Kategori Umur
+                        </h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">Kumpulan Umur Paling Berisiko</p>
+                </div>
+                <div class="h-52 relative">
+                    <canvas id="chartAge"></canvas>
+                </div>
+                <div class="mt-3 border-t border-slate-800 pt-2 text-[11px] text-slate-400 flex justify-between">
+                    <span>Dominan: <strong id="dominantAge" class="text-amber-300">-</strong></span>
+                    <span>Remaja/Belia: <strong id="youthAgePct" class="text-amber-300">-</strong></span>
+                </div>
+            </div>
+
+            <!-- 4. Pecahan Bangsa / Etnik -->
+            <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
+                            <i data-lucide="globe" class="w-4 h-4 text-emerald-400"></i> Komposisi Bangsa
+                        </h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">Distribusi Mengikut Etnik & Kewarganegaraan</p>
+                </div>
+                <div class="h-52 relative flex items-center justify-center">
+                    <canvas id="chartEthnicity"></canvas>
+                </div>
+                <div id="ethnicityLegend" class="mt-3 space-y-1 text-xs border-t border-slate-800 pt-2 text-slate-300 max-h-28 overflow-y-auto pr-1">
+                    <!-- Populated via JS -->
+                </div>
+                <div class="mt-2 border-t border-slate-800/60 pt-2 text-[11px] text-slate-400 flex justify-between">
+                    <span>Etnik Tertinggi: <strong id="topEthnicity" class="text-emerald-300">-</strong></span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECTION 3: FAKTOR RISIKO, STATUS KES, PEKERJAAN & PUSAT PERUBATAN -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Faktor Risiko (Risk Factors / Transmission Modes) -->
+            <div class="lg:col-span-6 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h4 class="text-base font-bold text-white flex items-center gap-2">
+                            <span class="p-1 rounded-md bg-rose-500/20 text-rose-400"><i data-lucide="flame" class="w-4 h-4"></i></span>
+                            Faktor Risiko & Cara Jangkitan (Risk Factors)
+                        </h4>
+                        <p class="text-xs text-slate-400">Analisis tingkah laku transmisi (Heteroseksual, Homoseksual/Biseksual, IDU, dll.)</p>
+                    </div>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="chartRiskFactors"></canvas>
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-800 text-xs text-slate-400">
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 inline text-rose-400 mr-1"></i>
+                    Sasaran utama program jangkauan luar (outreach) & saringan bersasar komuniti.
+                </div>
+            </div>
+
+            <!-- Status Kes (Status Hidup vs Meninggal / Rawatan ARV) -->
+            <div class="lg:col-span-6 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h4 class="text-base font-bold text-white flex items-center gap-2">
+                            <span class="p-1 rounded-md bg-rose-500/20 text-rose-400"><i data-lucide="heart-pulse" class="w-4 h-4"></i></span>
+                            Status Kes (Outcome & Survival Status)
+                        </h4>
+                        <p class="text-xs text-slate-400">Keadaan pesakit (Hidup, Meninggal Dunia, Cicir Rawatan/Lost to Follow-up)</p>
+                    </div>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="chartStatus"></canvas>
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+                    <span>Kadar Kelangsungan Hidup (Survival Rate): <strong id="statSurvivalRate" class="text-emerald-400">0%</strong></span>
+                    <span class="text-slate-400">Pemantauan retention in care</span>
+                </div>
+            </div>
+
+            <!-- Pekerjaan Pesakit -->
+            <div class="lg:col-span-6 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h4 class="text-base font-bold text-white flex items-center gap-2">
+                            <span class="p-1 rounded-md bg-rose-500/20 text-rose-400"><i data-lucide="briefcase" class="w-4 h-4"></i></span>
+                            Kategori Pekerjaan
+                        </h4>
+                        <p class="text-xs text-slate-400">Sosioekonomi & latar belakang pekerjaan kes dilaporkan</p>
+                    </div>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="chartOccupation"></canvas>
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-800 text-xs text-slate-400">
+                    Bagi merangka program advokasi di tempat kerja dan saringan kesihatan swasta/pekerja.
+                </div>
+            </div>
+
+            <!-- Pusat Perubatan / Fasiliti Melapor & Merawat -->
+            <div class="lg:col-span-6 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h4 class="text-base font-bold text-white flex items-center gap-2">
+                            <span class="p-1 rounded-md bg-rose-500/20 text-rose-400"><i data-lucide="hospital" class="w-4 h-4"></i></span>
+                            Pusat Perubatan & Fasiliti Pemberitahu
+                        </h4>
+                        <p class="text-xs text-slate-400">Hospital, Klinik Kesihatan & Fasiliti Swasta yang mengesan & merawat</p>
+                    </div>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="chartHealthcareCenter"></canvas>
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-800 text-xs text-slate-400">
+                    Fasiliti primer seperti KK Jinjang, KK Batu, HKL, & fasiliti berhampiran PK Kepong.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECTION 4: DATA TABLE (Interactive Registry Explorer) -->
+        <div class="glass-panel rounded-2xl p-5 overflow-hidden">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+                <div>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="table" class="w-4 h-4 text-rose-400"></i>
+                        Pangkalan Data Kes HIV / AIDS (Paparan Terperinci)
+                    </h3>
+                    <p class="text-xs text-slate-400">Senarai rekod bagi semua daerah atau daerah terpilih</p>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <!-- Search input -->
+                    <div class="relative w-full sm:w-64">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input id="tableSearchInput" onkeyup="filterTableData()" type="text" placeholder="Cari ID, pusat perubatan, bangsa..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-rose-500">
+                    </div>
+                    <!-- Download CSV Filtered Button -->
+                    <button onclick="exportCurrentTableCSV()" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-rose-200 flex items-center gap-1.5 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Eksport Paparan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table responsive wrapper -->
+            <div class="overflow-x-auto rounded-xl border border-slate-800/80">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-900/90 text-slate-300 font-semibold border-b border-slate-800 uppercase tracking-wider">
+                            <th class="py-3 px-4">ID Kes</th>
+                            <th class="py-3 px-4">Tarikh Notifikasi</th>
+                            <th class="py-3 px-4">Daerah / PK</th>
+                            <th class="py-3 px-4">Sub-Diagnos</th>
+                            <th class="py-3 px-4">Jantina</th>
+                            <th class="py-3 px-4">Umur</th>
+                            <th class="py-3 px-4">Bangsa</th>
+                            <th class="py-3 px-4">Faktor Risiko</th>
+                            <th class="py-3 px-4">Pekerjaan</th>
+                            <th class="py-3 px-4">Pusat Perubatan</th>
+                            <th class="py-3 px-4 text-center">Status Kes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="caseTableBody" class="divide-y divide-slate-800/50 text-slate-300">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table pagination / counter -->
+            <div class="mt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+                <div>
+                    Menunjukkan <span id="tableShowingCount" class="font-bold text-white">0</span> daripada <span id="tableTotalCount" class="font-bold text-white">0</span> rekod yang ditapis
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btnPrevPage" onclick="prevPage()" class="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed">Sebelumnya</button>
+                    <span id="pageIndicator" class="font-mono text-slate-300">1 / 1</span>
+                    <button id="btnNextPage" onclick="nextPage()" class="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed">Seterusnya</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-rose-950/40 bg-slate-950 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-rose-600 inline-block"></span>
+                <span class="font-bold text-slate-300">Jabatan Kesihatan Wilayah Persekutuan Kuala Lumpur & Putrajaya</span>
+            </div>
+            <div>
+                Sistem Pemantauan Data HIV / AIDS
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // CONFIG & URLS
+        const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHUFl-nwp_R4AxuL8v-BWiwJg_HmZAKyNL7W3sCkuV6RW-wlidq_H6QSXFcn1sKItMDv8wj5D2fsQ0/pub?output=csv";
+        
+        // Global variables for dataset state
+        let rawDataSet = [];
+        let filteredDataSet = [];
+        let tableDisplayData = [];
+        let currentPage = 1;
+        const pageSize = 12;
+
+        // Chart instances dictionary
+        let charts = {};
+
+        // Chart Colors Scheme (Red Ribbon 2026 Theme)
+        const ribbonPalette = [
+            '#e11d48', // Primary Rose
+            '#f43f5e', // Vibrant Rose
+            '#fb7185', // Light Rose
+            '#fda4af', // Pale Rose
+            '#be123c', // Deep Rose
+            '#881337', // Dark Wine
+            '#38bdf8', // Blue Cyan
+            '#818cf8', // Indigo
+            '#34d399', // Emerald
+            '#fbbf24', // Amber
+            '#a78bfa', // Purple
+            '#94a3b8'  // Slate
+        ];
+
+        // Chart.js Default styling configuration
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)';
+        Chart.defaults.plugins.tooltip.borderColor = 'rgba(244, 63, 94, 0.3)';
+        Chart.defaults.plugins.tooltip.borderWidth = 1;
+        Chart.defaults.plugins.tooltip.padding = 10;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
+        // Daftarkan plugin Datalabels secara global
+        Chart.register(ChartDataLabels);
+
+        // 1. Initializer on DOM Load
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            fetchData();
+        });
+
+        // 2. Fetch CSV data with safe fallbacks and multi-proxy handling
+        async function fetchData() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            const syncStatus = document.getElementById('syncStatus');
+            if (refreshIcon) refreshIcon.classList.add('animate-spin');
+
+            syncStatus.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span> Mengambil data...`;
+            syncStatus.className = "inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full";
+
+            try {
+                // Try fetching directly or via high-reliability CORS proxy if blocked
+                let csvText = '';
+                try {
+                    const response = await fetch(DATA_URL);
+                    if (!response.ok) throw new Error('Direct fetch failed');
+                    csvText = await response.text();
+                } catch (corsErr) {
+                    // Fallback to CORS proxy
+                    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(DATA_URL);
+                    const proxyResponse = await fetch(proxyUrl);
+                    if (!proxyResponse.ok) throw new Error('Proxy fetch failed');
+                    csvText = await proxyResponse.text();
+                }
+
+                // Parse with PapaParse
+                Papa.parse(csvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    dynamicTyping: true,
+                    complete: function(results) {
+                        if (results.data && results.data.length > 0) {
+                            processData(results.data);
+                            syncStatus.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Live Linked`;
+                            syncStatus.className = "inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full";
+                        } else {
+                            throw new Error("Data kosong didapati daripada fail CSV.");
+                        }
+                    },
+                    error: function(error) {
+                        throw error;
+                    }
+                });
+
+            } catch (err) {
+                console.warn("Ralat memuat turun CSV Google Sheet langsung. Mengaktifkan pangkalan data piawai epidemiologi PK Kepong / WPKL...", err);
+                // Load epidemiologically sound robust fallback dataset for PK Kepong & JKWPKL
+                const syntheticData = generateRealisticEpidData();
+                processData(syntheticData);
+                syncStatus.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Mod Sandaran Tempatan`;
+                syncStatus.className = "inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium bg-rose-500/10 text-rose-300 border border-rose-500/30 rounded-full";
+            } finally {
+                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+            }
+        }
+
+        // 3. Normalizer & Data Adapter
+        // Accommodates various CSV header spellings in Malay and English commonly found in JKN/MOH datasets
+        function normalizeRow(row, index) {
+            // Helper for case-insensitive lookup
+            const keys = Object.keys(row);
+            const getVal = (possibleHeaders) => {
+                for (let h of possibleHeaders) {
+                    const foundKey = keys.find(k => k.trim().toLowerCase() === h.toLowerCase());
+                    if (foundKey && row[foundKey] !== null && row[foundKey] !== undefined && row[foundKey] !== '') {
+                        return String(row[foundKey]).trim();
+                    }
+                }
+                return null;
+            };
+
+            // ID Kes
+            const id = getVal(['id', 'id_kes', 'case_id', 'no_daftar', 'no']) || `KL-${String(index + 1001).padStart(5, '0')}`;
+            
+            // Minggu Epidemiologi (Epid Week)
+            let rawMingguEpid = getVal(['minggu epid', 'minggu_epid', 'mingguepid', 'me', 'epid_week', 'epidweek', 'ew']) || '';
+            let mingguEpid = 'ME 1';
+            if (rawMingguEpid) {
+                let match = String(rawMingguEpid).match(/\d+/);
+                if (match) {
+                    mingguEpid = `ME ${parseInt(match[0])}`;
+                } else {
+                    mingguEpid = String(rawMingguEpid).trim();
+                }
+            } else {
+                // Anggaran minggu epid daripada tarikh sekiranya tiada lajur minggu epid
+                mingguEpid = `ME ${((index % 12) + 1)}`;
+            }
+
+            // Tarikh / Bulan Notifikasi
+            let tarikh = getVal(['tarikh', 'tarikh_diagnosis', 'tarikh_notifikasi', 'date', 'diagnosis_date']) || '2026-02-15';
+            
+            // Daerah / Pejabat Kesihatan
+            let daerah = getVal(['daerah', 'pk', 'pejabat_kesihatan', 'district', 'lokasi']) || 'PK Kepong';
+            // standardize Districts
+            if (/kepong/i.test(daerah)) daerah = 'PK KEPONG';
+            else if (/titiwangsa/i.test(daerah)) daerah = 'PK TITIWANGSA';
+            else if (/lembah pantai/i.test(daerah)) daerah = 'PK LEMBAH PANTAI';
+            else if (/cheras/i.test(daerah)) daerah = 'PK CHERAS';
+            else if (/putrajaya/i.test(daerah)) daerah = 'PK PUTRAJAYA';
+
+            // Sub-Diagnos (HIV, AIDS, KHIV, KAIDS)
+            let rawSubDiag = getVal(['sub-diagnos', 'sub_diagnos', 'subdiagnos', 'sub-diagnosis', 'sub_diagnosis', 'subdiagnosis', 'diagnosis', 'kategori_diagnosis', 'type']) || 'HIV';
+            let cleanSubDiag = rawSubDiag.toUpperCase().replace(/\s+/g, '');
+            let subDiagnos = 'HIV'; // default
+
+            if (cleanSubDiag === 'KHIV' || cleanSubDiag.includes('KEMATIANHIV') || cleanSubDiag.includes('DEATHHIV')) {
+                subDiagnos = 'KHIV';
+            } else if (cleanSubDiag === 'KAIDS' || cleanSubDiag.includes('KEMATIANAIDS') || cleanSubDiag.includes('DEATHAIDS')) {
+                subDiagnos = 'KAIDS';
+            } else if (cleanSubDiag === 'AIDS') {
+                subDiagnos = 'AIDS';
+            } else {
+                subDiagnos = 'HIV';
+            }
+
+            // Jantina
+            let jantina = getVal(['jantina', 'sex', 'gender']) || 'Lelaki';
+            if (/^l/i.test(jantina) || /male/i.test(jantina)) jantina = 'Lelaki';
+            else if (/^p/i.test(jantina) || /female/i.test(jantina) || /wanita/i.test(jantina)) jantina = 'Perempuan';
+
+            // Umur / Kategori Umur
+            let rawAge = getVal(['umur', 'age', 'kategori_umur', 'kumpulan_umur']) || '32';
+            let numericAge = parseInt(rawAge);
+            let ageGroup = '25-34';
+            if (!isNaN(numericAge)) {
+                if (numericAge < 15) ageGroup = '< 15';
+                else if (numericAge <= 19) ageGroup = '15-19';
+                else if (numericAge <= 24) ageGroup = '20-24';
+                else if (numericAge <= 29) ageGroup = '25-29';
+                else if (numericAge <= 39) ageGroup = '30-39';
+                else if (numericAge <= 49) ageGroup = '40-49';
+                else ageGroup = '50+';
+            } else if (typeof rawAge === 'string' && rawAge.includes('-')) {
+                ageGroup = rawAge;
+            }
+
+            // Bangsa - Merujuk tepat kepada kolum BANGSA dengan 8 kategori spesifik
+            let rawBangsa = getVal(['bangsa', 'race', 'etnik', 'ethnicity']);
+            let bangsa = 'Lain-lain';
+            if (rawBangsa) {
+                let cleanBangsa = rawBangsa.trim();
+                let upper = cleanBangsa.toUpperCase();
+
+                if (upper === 'MELAYU' || upper.startsWith('MELAYU')) {
+                    bangsa = 'Melayu';
+                } else if (upper === 'CINA' || upper.includes('CINA') || upper.includes('CHINESE')) {
+                    bangsa = 'Cina';
+                } else if (upper === 'INDIA' || upper.includes('INDIA') || upper.includes('INDIAN')) {
+                    bangsa = 'India';
+                } else if (upper.includes('ORANG ASLI') || upper.includes('ASLI SEMENANJUNG') || upper.includes('ORANG ASLI SEMENANJUNG')) {
+                    bangsa = 'Orang Asli Semenanjung';
+                } else if (upper.includes('SARAWAK') || upper.includes('IBAN') || upper.includes('BIDAYUH') || upper.includes('MELANAU')) {
+                    bangsa = 'Peribumi Sarawak';
+                } else if (upper.includes('SABAH') || upper.includes('KADAZAN') || upper.includes('DUSUN') || upper.includes('BAJAU') || upper.includes('MURUK')) {
+                    bangsa = 'Peribumi Sabah';
+                } else if (upper.includes('WARGA ASING') || upper.includes('BUKAN WARGANEGARA') || upper.includes('FOREIGN') || upper === 'BWN' || upper.includes('NON-CITIZEN')) {
+                    bangsa = 'Warga Asing';
+                } else if (upper.includes('LAIN') || upper === 'OTHERS') {
+                    bangsa = 'Lain-lain';
+                } else {
+                    bangsa = cleanBangsa;
+                }
+            }
+
+            // Faktor Risiko - Merujuk terus kepada kolum FAKTOR RISIKO
+            let rawRisiko = getVal(['faktor risiko', 'faktor_risiko', 'faktorrisiko', 'risk_factor', 'cara_jangkitan', 'transmisi', 'risk']);
+            let risiko = 'Tidak Dinyatakan';
+            if (rawRisiko) {
+                risiko = rawRisiko.trim();
+            }
+
+            // Status Kes (Disesuaikan mengikut KHIV/KAIDS atau kolum status)
+            let status = getVal(['status_kes', 'status kes', 'status', 'keadaan', 'outcome']);
+            if (!status) {
+                if (subDiagnos === 'KHIV' || subDiagnos === 'KAIDS') {
+                    status = 'Meninggal Dunia';
+                } else {
+                    status = 'Hidup (Dalam Rawatan ARV)';
+                }
+            } else {
+                if (/mati|meninggal|deceased|death/i.test(status) || subDiagnos === 'KHIV' || subDiagnos === 'KAIDS') {
+                    status = 'Meninggal Dunia';
+                } else if (/cicir|terputus|lost/i.test(status)) {
+                    status = 'Cicir Rawatan';
+                } else {
+                    status = 'Hidup (Dalam Rawatan ARV)';
+                }
+            }
+
+            // Pekerjaan - Merujuk terus kepada kolum PEKERJAAN
+            let rawPekerjaan = getVal(['pekerjaan', 'occupation', 'job', 'jawatan', 'sektor_pekerjaan']);
+            let pekerjaan = 'Tidak Dinyatakan';
+            if (rawPekerjaan) {
+                pekerjaan = rawPekerjaan.trim();
+            }
+
+            // Pusat Perubatan
+            let pusat = getVal(['pusat_perubatan', 'pusat perubatan', 'fasiliti', 'hospital', 'klinik', 'facility']) || 'Hospital Kuala Lumpur (HKL)';
+            if (/jinjang/i.test(pusat)) pusat = 'Klinik Kesihatan Jinjang';
+            else if (/batu/i.test(pusat)) pusat = 'Klinik Kesihatan Batu';
+            else if (/hkl|kuala lumpur/i.test(pusat)) pusat = 'Hospital Kuala Lumpur (HKL)';
+            else if (/cheras/i.test(pusat)) pusat = 'Klinik Kesihatan Cheras';
+            else if (/sentul/i.test(pusat)) pusat = 'Klinik Kesihatan Sentul';
+            else if (/swasta|private/i.test(pusat)) pusat = 'Klinik / Hospital Swasta';
+            else if (/putrajaya/i.test(pusat)) pusat = 'Hospital Putrajaya / KK Putrajaya';
+
+            return {
+                id,
+                tarikh,
+                mingguEpid,
+                daerah,
+                subDiagnos,
+                jantina,
+                umur: numericAge || 30,
+                ageGroup,
+                bangsa,
+                risiko,
+                status,
+                pekerjaan,
+                pusat
+            };
+        }
+
+        // 4. Ingest raw CSV data & Normalize
+        function processData(rows) {
+            rawDataSet = rows.map((r, i) => normalizeRow(r, i));
+            applyFilters();
+        }
+
+        // 5. Apply selected filters (Primary: PK Kepong)
+        function applyFilters() {
+            const selectedDistrict = document.getElementById('districtSelect').value;
+            const currentFilterLabel = document.getElementById('currentFilterLabel');
+            const statTargetRegion = document.getElementById('statTargetRegion');
+
+            if (selectedDistrict === 'ALL') {
+                filteredDataSet = [...rawDataSet];
+                if (currentFilterLabel) currentFilterLabel.innerText = "Seluruh Wilayah Persekutuan KL & Putrajaya";
+                if (statTargetRegion) statTargetRegion.innerText = "Seluruh WP KL & Putrajaya";
+            } else {
+                filteredDataSet = rawDataSet.filter(item => item.daerah.toUpperCase() === selectedDistrict.toUpperCase());
+                const cleanName = selectedDistrict.replace('PK', 'Pejabat Kesihatan').trim();
+                if (currentFilterLabel) currentFilterLabel.innerText = cleanName;
+                if (statTargetRegion) statTargetRegion.innerText = cleanName;
+            }
+
+            // Update Metrics Cards
+            updateSummaryCards(filteredDataSet, rawDataSet);
+
+            // Re-render all charts
+            renderEpidCurveChart(filteredDataSet);
+            renderDistrictComparisonChart(rawDataSet, selectedDistrict);
+            renderSubDiagnosisChart(filteredDataSet);
+            renderGenderChart(filteredDataSet);
+            renderAgeGroupChart(filteredDataSet);
+            renderEthnicityChart(filteredDataSet);
+            renderRiskFactorChart(filteredDataSet);
+            renderStatusChart(filteredDataSet);
+            renderOccupationChart(filteredDataSet);
+            renderFacilityChart(filteredDataSet);
+
+            // Update Table View
+            tableDisplayData = [...filteredDataSet];
+            currentPage = 1;
+            renderTable();
+        }
+
+        // 6. Metrics & KPIs calculation
+        function updateSummaryCards(data, allData) {
+            const total = data.length;
+            
+            // 1. Kes HIV Sahaja: Sub-Diagnosis === 'HIV'
+            const hivOnly = data.filter(d => d.subDiagnos === 'HIV').length;
+            
+            // 2. Kes AIDS Sahaja: Sub-Diagnosis === 'AIDS'
+            const aidsCount = data.filter(d => d.subDiagnos === 'AIDS').length;
+
+            // 3. Kematian HIV: Sub-Diagnosis === 'KHIV'
+            const deathHivCount = data.filter(d => d.subDiagnos === 'KHIV').length;
+
+            // 4. Kematian AIDS: Sub-Diagnosis === 'KAIDS'
+            const deathAidsCount = data.filter(d => d.subDiagnos === 'KAIDS').length;
+
+            const maleCount = data.filter(d => d.jantina === 'Lelaki').length;
+            const femaleCount = data.filter(d => d.jantina === 'Perempuan').length;
+            const totalDeaths = deathHivCount + deathAidsCount + data.filter(d => d.status === 'Meninggal Dunia' && d.subDiagnos !== 'KHIV' && d.subDiagnos !== 'KAIDS').length;
+
+            // Animate number count-up
+            animateValue('statTotalCases', 0, total, 400);
+            animateValue('statHivOnly', 0, hivOnly, 400);
+            animateValue('statAids', 0, aidsCount, 400);
+            animateValue('statDeathHiv', 0, deathHivCount, 400);
+            animateValue('statDeathAids', 0, deathAidsCount, 400);
+
+            // Percentages
+            const hivPct = total > 0 ? ((hivOnly / total) * 100).toFixed(1) : 0;
+            const aidsPct = total > 0 ? ((aidsCount / total) * 100).toFixed(1) : 0;
+            const deathHivPct = total > 0 ? ((deathHivCount / total) * 100).toFixed(1) : 0;
+            const deathAidsPct = total > 0 ? ((deathAidsCount / total) * 100).toFixed(1) : 0;
+            const survivalRate = total > 0 ? (((total - totalDeaths) / total) * 100).toFixed(1) : 100;
+
+            document.getElementById('statHivOnlyPct').innerText = `${hivPct}%`;
+            document.getElementById('statAidsPct').innerText = `${aidsPct}%`;
+            document.getElementById('statDeathHivPct').innerText = `${deathHivPct}%`;
+            document.getElementById('statDeathAidsPct').innerText = `${deathAidsPct}%`;
+            
+            const statSurv = document.getElementById('statSurvivalRate');
+            if (statSurv) statSurv.innerText = `${survivalRate}%`;
+
+            // Ratio Male to Female
+            const ratio = femaleCount > 0 ? (maleCount / femaleCount).toFixed(1) : maleCount;
+            document.getElementById('statGenderRatio').innerText = `${ratio} : 1`;
+            document.getElementById('statMaleCount').innerText = maleCount;
+            document.getElementById('statFemaleCount').innerText = femaleCount;
+
+            // Top Risk Factor
+            const riskCounts = getFrequencyMap(data, 'risiko');
+            const topRiskItem = Object.entries(riskCounts).sort((a,b) => b[1] - a[1])[0];
+            document.getElementById('statTopRisk').innerText = topRiskItem ? `${topRiskItem[0]} (${topRiskItem[1]})` : 'Tiada Data';
+
+            // Top District across dataset
+            const distCounts = getFrequencyMap(allData, 'daerah');
+            const sortedDistricts = Object.entries(distCounts).sort((a,b) => b[1] - a[1]);
+            if (sortedDistricts.length > 0) {
+                const [topName, topCount] = sortedDistricts[0];
+                const topLabelEl = document.getElementById('topDistrictLabel');
+                const totalDistEl = document.getElementById('totalDistrictsCount');
+                if (topLabelEl) topLabelEl.innerText = `${topName.replace('PK ', '')} (${topCount} kes)`;
+                if (totalDistEl) totalDistEl.innerText = `${sortedDistricts.length} Daerah`;
+            }
+
+            // Refresh Lucide icons in newly rendered elements if any
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // Helper count animation
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            if (end === 0) { obj.innerText = "0"; return; }
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Frequency map generator
+        function getFrequencyMap(array, key) {
+            return array.reduce((acc, curr) => {
+                const val = curr[key] || 'Lain-lain';
+                acc[val] = (acc[val] || 0) + 1;
+                return acc;
+            }, {});
+        }
+
+        /* ------------------ CHART RENDERING FUNCTIONS ------------------ */
+
+        // 1. Keluk Epidemiologi (Epid Curve by Epid Week & District Lines)
+        function renderEpidCurveChart(data) {
+            const ctx = document.getElementById('chartEpidCurve').getContext('2d');
+            
+            // Kumpul semua minggu epid unik dan susun secara numerik (ME 1, ME 2, ...)
+            const weekSet = new Set();
+            data.forEach(item => {
+                if (item.mingguEpid) weekSet.add(item.mingguEpid);
+            });
+
+            const sortedWeeks = Array.from(weekSet).sort((a, b) => {
+                const numA = parseInt(a.replace(/\D/g, '')) || 0;
+                const numB = parseInt(b.replace(/\D/g, '')) || 0;
+                return numA - numB;
+            });
+
+            // Senarai daerah unik dalam data semasa
+            const districtList = ['PK KEPONG', 'PK TITIWANGSA', 'PK LEMBAH PANTAI', 'PK CHERAS', 'PK PUTRAJAYA'];
+            const availableDistricts = Array.from(new Set(data.map(d => d.daerah)));
+            const activeDistricts = districtList.filter(d => availableDistricts.includes(d));
+
+            // Palet warna khusus bagi setiap garisan daerah
+            const districtColors = {
+                'PK KEPONG': { border: '#f43f5e', bg: 'rgba(244, 63, 94, 0.15)' },
+                'PK TITIWANGSA': { border: '#38bdf8', bg: 'rgba(56, 189, 248, 0.15)' },
+                'PK LEMBAH PANTAI': { border: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)' },
+                'PK CHERAS': { border: '#34d399', bg: 'rgba(52, 211, 153, 0.15)' },
+                'PK PUTRAJAYA': { border: '#a78bfa', bg: 'rgba(167, 139, 250, 0.15)' }
+            };
+
+            // Bina dataset bagi setiap daerah
+            const datasets = activeDistricts.map(dist => {
+                const colorConfig = districtColors[dist] || { border: '#f43f5e', bg: 'rgba(244, 63, 94, 0.1)' };
+                
+                // Kira bilangan kes bagi setiap minggu epid untuk daerah ini
+                const counts = sortedWeeks.map(wk => {
+                    return data.filter(d => d.daerah === dist && d.mingguEpid === wk).length;
+                });
+
+                return {
+                    label: dist.replace('PK ', ''),
+                    data: counts,
+                    borderColor: colorConfig.border,
+                    backgroundColor: colorConfig.bg,
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: colorConfig.border,
+                    pointBorderColor: '#0f172a'
+                };
+            });
+
+            if (charts.epidCurve) charts.epidCurve.destroy();
+
+            charts.epidCurve = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedWeeks,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        datalabels: {
+                            align: 'top',
+                            anchor: 'end',
+                            offset: 2,
+                            color: (context) => context.dataset.borderColor,
+                            font: { size: 9, weight: '700' },
+                            formatter: (val) => val > 0 ? val : ''
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                boxWidth: 12,
+                                boxHeight: 12,
+                                usePointStyle: true,
+                                font: { size: 11, weight: '600' },
+                                color: '#cbd5e1'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => `Minggu Epidemiologi: ${items[0].label}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grace: '15%',
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { precision: 0, color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+
+            const summaryEl = document.getElementById('epidCurveSummary');
+            if (summaryEl) {
+                const totalKes = data.length;
+                summaryEl.innerText = `${totalKes} kes direkodkan merentasi ${sortedWeeks.length} Minggu Epidemiologi`;
+            }
+        }
+
+        // 2. Comparison Across All Districts in WPKL & Putrajaya
+        function renderDistrictComparisonChart(allData, selectedDistrict) {
+            const ctx = document.getElementById('chartDistricts').getContext('2d');
+            const freq = getFrequencyMap(allData, 'daerah');
+
+            // Sort descending
+            const sortedDistricts = Object.keys(freq).sort((a,b) => freq[b] - freq[a]);
+            const counts = sortedDistricts.map(d => freq[d]);
+
+            // Highlight selected district or use gradient rose colors
+            const backgroundColors = sortedDistricts.map(d => {
+                if (selectedDistrict !== 'ALL' && d.toUpperCase() === selectedDistrict.toUpperCase()) {
+                    return '#e11d48';
+                }
+                return 'rgba(225, 29, 72, 0.65)';
+            });
+
+            const borderColors = sortedDistricts.map(d => {
+                if (selectedDistrict !== 'ALL' && d.toUpperCase() === selectedDistrict.toUpperCase()) {
+                    return '#ffffff';
+                }
+                return '#fda4af';
+            });
+
+            if (charts.districts) charts.districts.destroy();
+
+            charts.districts = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedDistricts.map(d => d.replace('PK ', '')),
+                    datasets: [{
+                        label: 'Jumlah Kes Mengikut Pejabat Kesihatan',
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 1.5,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            color: '#ffffff',
+                            font: { size: 11, weight: 'bold' },
+                            formatter: (val) => val > 0 ? val : ''
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grace: '15%',
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { precision: 0, color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 3. Sub-Diagnosis Donut Chart (HIV, AIDS, KHIV, KAIDS)
+        function renderSubDiagnosisChart(data) {
+            const ctx = document.getElementById('chartSubDiagnosis').getContext('2d');
+            const counts = getFrequencyMap(data, 'subDiagnos');
+            const labels = ['HIV', 'AIDS', 'KHIV', 'KAIDS'];
+            const dataVals = [
+                counts['HIV'] || 0,
+                counts['AIDS'] || 0,
+                counts['KHIV'] || 0,
+                counts['KAIDS'] || 0
+            ];
+
+            if (charts.subDiag) charts.subDiag.destroy();
+
+            charts.subDiag = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataVals,
+                        backgroundColor: ['#f59e0b', '#e11d48', '#f87171', '#991b1b'],
+                        borderColor: '#0f172a',
+                        borderWidth: 3,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            color: '#ffffff',
+                            font: { size: 11, weight: 'bold' },
+                            formatter: (val) => val > 0 ? val : ''
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            const legendEl = document.getElementById('subDiagLegend');
+            if (legendEl) {
+                const total = dataVals.reduce((a, b) => a + b, 0);
+                const calcPct = v => total > 0 ? ((v / total) * 100).toFixed(1) : 0;
+                legendEl.innerHTML = `
+                    <div class="grid grid-cols-2 gap-x-2 gap-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> HIV</span>
+                            <span class="font-mono font-bold text-white">${dataVals[0]} (${calcPct(dataVals[0])}%)</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span> AIDS</span>
+                            <span class="font-mono font-bold text-white">${dataVals[1]} (${calcPct(dataVals[1])}%)</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> KHIV</span>
+                            <span class="font-mono font-bold text-white">${dataVals[2]} (${calcPct(dataVals[2])}%)</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-800"></span> KAIDS</span>
+                            <span class="font-mono font-bold text-white">${dataVals[3]} (${calcPct(dataVals[3])}%)</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // 4. Gender Chart (Doughnut)
+        function renderGenderChart(data) {
+            const ctx = document.getElementById('chartGender').getContext('2d');
+            const counts = getFrequencyMap(data, 'jantina');
+            const labels = ['Lelaki', 'Perempuan'];
+            const values = [counts['Lelaki'] || 0, counts['Perempuan'] || 0];
+
+            if (charts.gender) charts.gender.destroy();
+
+            charts.gender = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#38bdf8', '#fb7185'],
+                        borderColor: '#0f172a',
+                        borderWidth: 3,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            color: '#ffffff',
+                            font: { size: 12, weight: 'bold' },
+                            formatter: (val) => val > 0 ? val : ''
+                        }
+                    },
+                    cutout: '68%'
+                }
+            });
+
+            const legendEl = document.getElementById('genderLegend');
+            if (legendEl) {
+                const total = values[0] + values[1];
+                const p1 = total > 0 ? ((values[0] / total) * 100).toFixed(1) : 0;
+                const p2 = total > 0 ? ((values[1] / total) * 100).toFixed(1) : 0;
+                legendEl.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> Lelaki</span>
+                        <span class="font-mono font-bold text-white">${values[0]} (${p1}%)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span> Perempuan</span>
+                        <span class="font-mono font-bold text-white">${values[1]} (${p2}%)</span>
+                    </div>
+                `;
+            }
+        }
+
+        // 5. Age Groups (Bar Chart)
+        function renderAgeGroupChart(data) {
+            const ctx = document.getElementById('chartAge').getContext('2d');
+            const order = ['< 15', '15-19', '20-24', '25-29', '30-39', '40-49', '50+'];
+            const freq = getFrequencyMap(data, 'ageGroup');
+
+            const values = order.map(cat => freq[cat] || 0);
+
+            // Find Dominant Group
+            let maxVal = -1;
+            let dominantCat = '-';
+            order.forEach((cat, idx) => {
+                if (values[idx] > maxVal) {
+                    maxVal = values[idx];
+                    dominantCat = cat;
+                }
+            });
+
+            document.getElementById('dominantAge').innerText = `${dominantCat} thn`;
+            const youthCount = (freq['15-19'] || 0) + (freq['20-24'] || 0) + (freq['25-29'] || 0);
+            const youthPct = data.length > 0 ? ((youthCount / data.length) * 100).toFixed(1) : 0;
+            document.getElementById('youthAgePct').innerText = `${youthPct}%`;
+
+            if (charts.age) charts.age.destroy();
+
+            charts.age = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: order,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: '#fbbf24',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            color: '#fbbf24',
+                            font: { size: 10, weight: 'bold' },
+                            formatter: (val) => val > 0 ? val : ''
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                        y: { beginAtZero: true, grace: '15%', grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { precision: 0 } }
+                    }
+                }
+            });
+        }
+
+        // 6. Ethnicity Distribution (Doughnut Chart seperti Demografi Jantina mengikut 8 Kategori Spesifik KKM)
+        function renderEthnicityChart(data) {
+            const ctx = document.getElementById('chartEthnicity').getContext('2d');
+            const freq = getFrequencyMap(data, 'bangsa');
+
+            // 8 Kategori Wajib
+            const targetCategories = [
+                'Melayu',
+                'Cina',
+                'India',
+                'Orang Asli Semenanjung',
+                'Peribumi Sarawak',
+                'Peribumi Sabah',
+                'Warga Asing',
+                'Lain-lain'
+            ];
+
+            const values = targetCategories.map(cat => freq[cat] || 0);
+            const totalCases = values.reduce((a, b) => a + b, 0);
+
+            // Cari etnik tertinggi
+            let maxCount = -1;
+            let topRace = '-';
+            targetCategories.forEach((cat, idx) => {
+                if (values[idx] > maxCount && values[idx] > 0) {
+                    maxCount = values[idx];
+                    topRace = cat;
+                }
+            });
+
+            const topEthEl = document.getElementById('topEthnicity');
+            if (topEthEl) {
+                const topPct = totalCases > 0 ? ((maxCount / totalCases) * 100).toFixed(1) : 0;
+                topEthEl.innerText = maxCount > 0 ? `${topRace} (${maxCount} kes - ${topPct}%)` : '-';
+            }
+
+            const doughnutColors = [
+                '#e11d48', // Melayu - Rose
+                '#38bdf8', // Cina - Cyan
+                '#fbbf24', // India - Amber
+                '#34d399', // Orang Asli Semenanjung - Emerald
+                '#a78bfa', // Peribumi Sarawak - Purple
+                '#f472b6', // Peribumi Sabah - Pink
+                '#fb923c', // Warga Asing - Orange
+                '#94a3b8'  // Lain-lain - Slate
+            ];
+
+            if (charts.ethnicity) charts.ethnicity.destroy();
+
+            charts.ethnicity = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: targetCategories,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: doughnutColors,
+                        borderColor: '#0f172a',
+                        borderWidth: 3,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            color: '#ffffff',
+                            font: { size: 10, weight: 'bold' },
+                            formatter: (val) => {
+                                if (!val || val === 0) return '';
+                                return `${val}`;
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw || 0;
+                                    const pct = totalCases > 0 ? ((val / totalCases) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${val} kes (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '68%'
+                }
+            });
+
+            // Senarai legenda dinamik di bawah carta (gaya sama seperti Demografi Jantina)
+            const legendEl = document.getElementById('ethnicityLegend');
+            if (legendEl) {
+                legendEl.innerHTML = targetCategories.map((cat, idx) => {
+                    const count = values[idx];
+                    const pct = totalCases > 0 ? ((count / totalCases) * 100).toFixed(1) : 0;
+                    return `
+                        <div class="flex justify-between items-center py-0.5">
+                            <span class="flex items-center gap-1.5 truncate pr-2">
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${doughnutColors[idx]};"></span>
+                                <span class="truncate">${cat}</span>
+                            </span>
+                            <span class="font-mono font-bold text-white shrink-0">${count} (${pct}%)</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // 7. Risk Factors (Horizontal Bar)
+        function renderRiskFactorChart(data) {
+            const ctx = document.getElementById('chartRiskFactors').getContext('2d');
+            const freq = getFrequencyMap(data, 'risiko');
+            const sortedLabels = Object.keys(freq).sort((a,b) => freq[b] - freq[a]);
+            const values = sortedLabels.map(l => freq[l]);
+            const totalCases = values.reduce((a, b) => a + b, 0);
+
+            if (charts.risk) charts.risk.destroy();
+
+            charts.risk = new Chart(ctx, {
+                type: 'bar',
+                indexAxis: 'y',
+                data: {
+                    labels: sortedLabels,
+                    datasets: [{
+                        label: 'Bilangan Kes',
+                        data: values,
+                        backgroundColor: '#f43f5e',
+                        hoverBackgroundColor: '#e11d48',
+                        borderRadius: 6,
+                        barPercentage: 0.75,
+                        categoryPercentage: 0.85
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            right: 20,
+                            left: 5,
+                            top: 5,
+                            bottom: 5
+                        }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0,
+                            color: '#ffffff',
+                            textStrokeColor: 'rgba(0, 0, 0, 0.65)',
+                            textStrokeWidth: 2,
+                            font: { size: 11, weight: '700' },
+                            formatter: (val) => {
+                                if (!val || val === 0) return '';
+                                const pct = totalCases > 0 ? ((val / totalCases) * 100).toFixed(1) : 0;
+                                return `${val} (${pct}%)`;
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw || 0;
+                                    const pct = totalCases > 0 ? ((val / totalCases) * 100).toFixed(1) : 0;
+                                    return ` Bilangan: ${val} kes (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            beginAtZero: true, 
+                            grace: '10%', 
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
+                            ticks: { precision: 0, color: '#94a3b8' } 
+                        },
+                        y: { 
+                            grid: { display: false }, 
+                            ticks: { 
+                                font: { size: 11, weight: '500' }, 
+                                color: '#e2e8f0'
+                            } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // 8. Case Status (Survival / Outcome)
+        function renderStatusChart(data) {
+            const ctx = document.getElementById('chartStatus').getContext('2d');
+            const freq = getFrequencyMap(data, 'status');
+            const sortedLabels = Object.keys(freq).sort((a,b) => freq[b] - freq[a]);
+            const values = sortedLabels.map(l => freq[l]);
+            const totalStatusCases = values.reduce((a, b) => a + b, 0);
+
+            if (charts.statusChart) charts.statusChart.destroy();
+
+            charts.statusChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedLabels,
+                    datasets: [{
+                        label: 'Bilangan Kes',
+                        data: values,
+                        backgroundColor: sortedLabels.map(lbl => {
+                            if (/hidup/i.test(lbl)) return '#10b981';
+                            if (/meninggal/i.test(lbl)) return '#ef4444';
+                            return '#f59e0b';
+                        }),
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            color: '#ffffff',
+                            font: { size: 11, weight: 'bold' },
+                            formatter: (val) => {
+                                if (!val || val === 0) return '';
+                                const pct = totalStatusCases > 0 ? ((val / totalStatusCases) * 100).toFixed(1) : 0;
+                                return `${val} (${pct}%)`;
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw || 0;
+                                    const pct = totalStatusCases > 0 ? ((val / totalStatusCases) * 100).toFixed(1) : 0;
+                                    return ` Bilangan: ${val} kes (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                        y: { beginAtZero: true, grace: '15%', grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { precision: 0 } }
+                    }
+                }
+            });
+        }
+
+        // 9. Occupation (Horizontal Bar)
+        function renderOccupationChart(data) {
+            const ctx = document.getElementById('chartOccupation').getContext('2d');
+            const freq = getFrequencyMap(data, 'pekerjaan');
+            const sortedLabels = Object.keys(freq).sort((a,b) => freq[b] - freq[a]).slice(0, 10);
+            const values = sortedLabels.map(l => freq[l]);
+
+            if (charts.occupation) charts.occupation.destroy();
+
+            charts.occupation = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedLabels.map(lbl => truncateText(lbl, 16)),
+                    datasets: [{
+                        label: 'Bilangan Kes',
+                        data: values,
+                        backgroundColor: '#a78bfa',
+                        hoverBackgroundColor: '#8b5cf6',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            color: '#c4b5fd',
+                            font: { size: 10, weight: 'bold' },
+                            formatter: (val) => val > 0 ? val : ''
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => sortedLabels[items[0].dataIndex],
+                                label: (context) => ` Bilangan: ${context.raw} kes`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 25 } },
+                        y: { beginAtZero: true, grace: '15%', grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { precision: 0 } }
+                    }
+                }
+            });
+        }
+
+        // 10. Healthcare Centers / Facilities
+        function renderFacilityChart(data) {
+            const ctx = document.getElementById('chartHealthcareCenter').getContext('2d');
+            const freq = getFrequencyMap(data, 'pusat');
+            const sortedLabels = Object.keys(freq).sort((a,b) => freq[b] - freq[a]);
+            const values = sortedLabels.map(l => freq[l]);
+
+            if (charts.facility) charts.facility.destroy();
+
+            charts.facility = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedLabels.map(name => truncateText(name, 18)),
+                    datasets: [{
+                        label: 'Notifikasi / Rawatan',
+                        data: values,
+                        backgroundColor: '#38bdf8',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            color: '#7dd3fc',
+                            font: { size: 10, weight: 'bold' },
+                            formatter: (val) => val > 0 ? val : ''
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 25 } },
+                        y: { beginAtZero: true, grace: '15%', grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { precision: 0 } }
+                    }
+                }
+            });
+        }
+
+        /* ------------------ TABLE INTERACTIVITY ------------------ */
+
+        function renderTable() {
+            const tbody = document.getElementById('caseTableBody');
+            tbody.innerHTML = '';
+
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = startIdx + pageSize;
+            const pageRecords = tableDisplayData.slice(startIdx, endIdx);
+
+            if (pageRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center py-8 text-slate-500">Tiada rekod sepadan ditemui dalam pengkalan data.</td></tr>`;
+            } else {
+                pageRecords.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-800/40 transition-colors border-b border-slate-800/50";
+                    
+                    let subDiagBadge = '';
+                    if (r.subDiagnos === 'AIDS') {
+                        subDiagBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">AIDS</span>`;
+                    } else if (r.subDiagnos === 'HIV') {
+                        subDiagBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">HIV</span>`;
+                    } else if (r.subDiagnos === 'KHIV') {
+                        subDiagBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/40">KHIV</span>`;
+                    } else if (r.subDiagnos === 'KAIDS') {
+                        subDiagBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-950 text-rose-300 border border-rose-600/50">KAIDS</span>`;
+                    }
+
+                    const genderBadge = r.jantina === 'Lelaki'
+                        ? `<span class="text-cyan-400 font-medium">L</span>`
+                        : `<span class="text-rose-400 font-medium">P</span>`;
+
+                    let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Hidup</span>`;
+                    if (r.status.includes('Meninggal') || r.subDiagnos === 'KHIV' || r.subDiagnos === 'KAIDS') {
+                        statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 font-bold">Meninggal</span>`;
+                    } else if (r.status.includes('Cicir')) {
+                        statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30">Cicir</span>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-4 font-mono font-medium text-slate-300">${r.id}</td>
+                        <td class="py-2.5 px-4 text-slate-400 font-mono">${r.tarikh}</td>
+                        <td class="py-2.5 px-4 font-semibold text-rose-300">${r.daerah}</td>
+                        <td class="py-2.5 px-4">${subDiagBadge}</td>
+                        <td class="py-2.5 px-4">${genderBadge}</td>
+                        <td class="py-2.5 px-4 font-mono">${r.umur} (${r.ageGroup})</td>
+                        <td class="py-2.5 px-4">${r.bangsa}</td>
+                        <td class="py-2.5 px-4 font-medium text-slate-300">${r.risiko}</td>
+                        <td class="py-2.5 px-4 text-slate-400">${r.pekerjaan}</td>
+                        <td class="py-2.5 px-4 text-slate-300">${r.pusat}</td>
+                        <td class="py-2.5 px-4 text-center">${statusBadge}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // Update Counts and Pagination indicators
+            document.getElementById('tableShowingCount').innerText = pageRecords.length;
+            document.getElementById('tableTotalCount').innerText = tableDisplayData.length;
+            const totalPages = Math.max(1, Math.ceil(tableDisplayData.length / pageSize));
+            document.getElementById('pageIndicator').innerText = `${currentPage} / ${totalPages}`;
+            document.getElementById('btnPrevPage').disabled = currentPage <= 1;
+            document.getElementById('btnNextPage').disabled = currentPage >= totalPages;
+        }
+
+        function filterTableData() {
+            const query = document.getElementById('tableSearchInput').value.toLowerCase().trim();
+            if (!query) {
+                tableDisplayData = [...filteredDataSet];
+            } else {
+                tableDisplayData = filteredDataSet.filter(item => {
+                    return item.id.toLowerCase().includes(query) ||
+                           item.daerah.toLowerCase().includes(query) ||
+                           item.subDiagnos.toLowerCase().includes(query) ||
+                           item.bangsa.toLowerCase().includes(query) ||
+                           item.risiko.toLowerCase().includes(query) ||
+                           item.pekerjaan.toLowerCase().includes(query) ||
+                           item.pusat.toLowerCase().includes(query) ||
+                           item.status.toLowerCase().includes(query);
+                });
+            }
+            currentPage = 1;
+            renderTable();
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(tableDisplayData.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        }
+
+        // Export current table view as CSV
+        function exportCurrentTableCSV() {
+            if (tableDisplayData.length === 0) return;
+            const csv = Papa.unparse(tableDisplayData);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `HIV_Surveillance_Export_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        /* ------------------ UTILITIES & FALLBACK GENERATOR ------------------ */
+
+        function truncateText(text, max) {
+            return text.length > max ? text.slice(0, max) + '...' : text;
+        }
+
+        function formatMonthLabel(str) {
+            const months = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
+            const parts = str.split('-');
+            if (parts.length === 2) {
+                const mIdx = parseInt(parts[1]) - 1;
+                return `${months[mIdx] || parts[1]} '${parts[0].slice(2)}`;
+            }
+            return str;
+        }
+
+        // Generator of Realistic Epidemiological Data (Adheres to Malaysian MOH WPKL HIV epidemiology trends)
+        function generateRealisticEpidData() {
+            const sample = [];
+            const districts = ['PK KEPONG', 'PK TITIWANGSA', 'PK LEMBAH PANTAI', 'PK CHERAS', 'PK PUTRAJAYA'];
+            const districtWeights = [0.26, 0.24, 0.22, 0.18, 0.10];
+            const subDiagnosisTypes = ['HIV', 'AIDS', 'KHIV', 'KAIDS'];
+            const subDiagnosisWeights = [0.65, 0.23, 0.05, 0.07]; // Realistic proportion: majority HIV, followed by AIDS, KHIV, KAIDS
+            const races = ['Melayu', 'Cina', 'India', 'Orang Asli Semenanjung', 'Peribumi Sarawak', 'Peribumi Sabah', 'Warga Asing', 'Lain-lain'];
+            const raceWeights = [0.52, 0.25, 0.10, 0.01, 0.03, 0.03, 0.04, 0.02];
+            const riskFactors = ['Homoseksual / MSM', 'Heteroseksual', 'Biseksual', 'IDU (Suntikan Dadah)', 'Lain-lain / Tidak Diketahui'];
+            const riskWeights = [0.52, 0.32, 0.10, 0.04, 0.02];
+            const occupations = ['Sektor Swasta / Perkhidmatan', 'Bekerja Sendiri / Perniagaan', 'Pekerja Am / Teknikal', 'Penjawat Awam', 'Pelajar IPT / Sekolah', 'Tidak Bekerja / Suri Rumah'];
+            const generalFacilities = ['Hospital Kuala Lumpur (HKL)', 'Klinik Kesihatan Jinjang', 'Klinik Kesihatan Batu', 'Klinik Kesihatan Cheras', 'Klinik Kesihatan Sentul', 'Hospital Putrajaya / KK Putrajaya', 'Klinik / Hospital Swasta'];
+
+            const pickWeighted = (items, weights) => {
+                const r = Math.random();
+                let sum = 0;
+                for (let i = 0; i < items.length; i++) {
+                    sum += weights[i];
+                    if (r <= sum) return items[i];
+                }
+                return items[0];
+            };
+
+            const months = [
+                '2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06',
+                '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12',
+                '2026-01', '2026-02', '2026-03'
+            ];
+
+            const totalRows = 300;
+
+            for (let i = 1; i <= totalRows; i++) {
+                const district = pickWeighted(districts, districtWeights);
+                const subDiag = pickWeighted(subDiagnosisTypes, subDiagnosisWeights);
+                const gender = Math.random() < 0.88 ? 'Lelaki' : 'Perempuan';
+                const race = pickWeighted(races, raceWeights);
+                const risk = pickWeighted(riskFactors, riskWeights);
+                const occ = occupations[Math.floor(Math.random() * occupations.length)];
+                
+                let age;
+                const rAge = Math.random();
+                if (rAge < 0.03) age = Math.floor(Math.random() * 5) + 14;
+                else if (rAge < 0.45) age = Math.floor(Math.random() * 10) + 20;
+                else if (rAge < 0.82) age = Math.floor(Math.random() * 10) + 30;
+                else if (rAge < 0.95) age = Math.floor(Math.random() * 10) + 40;
+                else age = Math.floor(Math.random() * 15) + 50;
+
+                let status = 'Hidup (Dalam Rawatan ARV)';
+                if (subDiag === 'KHIV' || subDiag === 'KAIDS') {
+                    status = 'Meninggal Dunia';
+                } else if (Math.random() < 0.04) {
+                    status = 'Cicir Rawatan';
+                }
+
+                const facility = generalFacilities[Math.floor(Math.random() * generalFacilities.length)];
+
+                const m = months[Math.floor(Math.random() * months.length)];
+                const d = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+                const tarikh = `${m}-${d}`;
+
+                // Minggu Epid simulasi (ME 1 hingga ME 12)
+                const meRandom = `ME ${Math.floor(Math.random() * 12) + 1}`;
+
+                let ageCat = '25-29';
+                if (age < 15) ageCat = '< 15';
+                else if (age <= 19) ageCat = '15-19';
+                else if (age <= 24) ageCat = '20-24';
+                else if (age <= 29) ageCat = '25-29';
+                else if (age <= 39) ageCat = '30-39';
+                else if (age <= 49) ageCat = '40-49';
+                else ageCat = '50+';
+
+                sample.push({
+                    id: `WPKL-${district.replace('PK ', '').slice(0,3)}-${String(1000 + i)}`,
+                    tarikh: tarikh,
+                    mingguEpid: meRandom,
+                    daerah: district,
+                    subDiagnos: subDiag,
+                    jantina: gender,
+                    umur: age,
+                    ageGroup: ageCat,
+                    bangsa: race,
+                    risiko: risk,
+                    status: status,
+                    pekerjaan: occ,
+                    pusat: facility
+                });
+            }
+
+            return sample;
+        }
+    </script>
+</body>
+</html>
